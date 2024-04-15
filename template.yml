@@ -10,13 +10,13 @@ Metadata:
     LicenseUrl: LICENSE
     ReadmeUrl: README.md
     Labels: ['lambda', 'performance', 'coldstart', 'devops']
-    HomePageUrl: https://github.com/lumigo-io/SAR-measure-cold-start.git
-    SemanticVersion: 1.4.1
-    SourceCodeUrl: https://github.com/lumigo-io/SAR-measure-cold-start.git
+    HomePageUrl: https://github.com/franizus/SAR-measure-cold-start
+    SemanticVersion: 1.4.2
+    SourceCodeUrl: https://github.com/franizus/SAR-measure-cold-start
 
 Globals:
   Function:
-    Runtime: nodejs14.x
+    Runtime: nodejs16.x
     MemorySize: 128
     Environment:
       Variables:
@@ -56,7 +56,7 @@ Resources:
               - logs:GetQueryResults
             Resource: "*"
 
-  LoopLogGroup:
+  AnalyzeLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /aws/lambda/${Analyze}
