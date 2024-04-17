@@ -11,7 +11,7 @@ Metadata:
     ReadmeUrl: README.md
     Labels: ['lambda', 'performance', 'coldstart', 'devops']
     HomePageUrl: https://github.com/franizus/SAR-measure-cold-start
-    SemanticVersion: 1.4.2
+    SemanticVersion: 1.4.3
     SourceCodeUrl: https://github.com/franizus/SAR-measure-cold-start
 
 Globals:
