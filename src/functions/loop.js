@@ -1,7 +1,8 @@
-const uuid = require("uuid/v4");
-const Log = require("@dazn/lambda-powertools-logger");
-const AWS = require("aws-sdk");
-const Lambda = new AWS.Lambda();
+const { v4: uuid } = require('uuid');
+const { Logger } = require('@aws-lambda-powertools/logger');
+const { LambdaClient, GetFunctionConfigurationCommand, UpdateFunctionConfigurationCommand, waitUntilFunctionUpdatedV2 } = require("@aws-sdk/client-lambda");
+const client = new LambdaClient();
+const logger = new Logger();
 
 module.exports.handler = async (input, context) => {  
 	const functionName = input.functionName;
@@ -25,32 +26,37 @@ module.exports.handler = async (input, context) => {
 };
 
 const getEnvVars = async (functionName) => {
-	Log.debug("getting current env variables", { functionName });
-	const resp = await Lambda.getFunctionConfiguration({
+	logger.debug("getting current env variables", { functionName });
+	const input = {
 		FunctionName: functionName
-	}).promise();
+	};
+	const command = new GetFunctionConfigurationCommand(input);
+	const resp = await client.send(command);
 
 	return resp.Environment || { Variables: {} };
 };
 
 const updateEnvVar = async (functionName, envVars) => {
-	Log.debug("touching environment variable", { functionName });
+	logger.debug("touching environment variable", { functionName });
 	envVars.Variables["uuid"] = uuid();
 
-	const req = {
+	const input = {
 		FunctionName: functionName,
 		Environment: envVars
 	};
-	await Lambda.updateFunctionConfiguration(req).promise();
-	await Lambda.waitFor("functionUpdatedV2", {FunctionName: functionName,}).promise();
+	const command = new UpdateFunctionConfigurationCommand(input);
+	await client.send(command);
+	
+	await waitUntilFunctionUpdatedV2({client}, {FunctionName: functionName});
 };
 
 const invoke = async (functionName, payload) => {
-	Log.debug("invoking", { functionName });
-	const req = {
+	logger.debug("invoking", { functionName });
+	const input = {
 		FunctionName: functionName,
 		InvocationType: "RequestResponse",
 		Payload: payload
 	};
-	await Lambda.invoke(req).promise();
+	const command = new InvokeCommand(input);
+	await client.send(command);
 };

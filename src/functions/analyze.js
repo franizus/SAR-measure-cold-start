@@ -1,6 +1,7 @@
 const _ = require("lodash");
-const AWS = require("aws-sdk");
-const CloudWatchLogs = new AWS.CloudWatchLogs();
+const { CloudWatchLogsClient, GetQueryResultsCommand, StartQueryCommand } = require("@aws-sdk/client-cloudwatch-logs");
+
+const client = new CloudWatchLogsClient();
 const Retry = require("async-retry");
 
 const queryString = `
@@ -20,19 +21,25 @@ fields @memorySize / 1000000 as memorySize
 module.exports.handler = async ({ startTime, functionName }) => {
 	const endTime = new Date();
 	const logGroupNames = [`/aws/lambda/${functionName}`];
-	const startResp = await CloudWatchLogs.startQuery({
+
+	const input = {
 		logGroupNames,
 		startTime: new Date(startTime).getTime() / 1000,
 		endTime: endTime.getTime() / 1000,
 		queryString
-	}).promise();
+	};
+
+	const command = new StartQueryCommand(input);
+	const startResp = await client.send(command);
 
 	const queryId = startResp.queryId;
 	const rows = await Retry(
 		async () => {
-			const resp = await CloudWatchLogs.getQueryResults({
+			const input = {
 				queryId
-			}).promise();
+			};
+			const command = new GetQueryResultsCommand(input);
+			const resp = await client.send(command);
 
 			if (resp.status !== "Complete") {
 				throw new Error("query result not ready yet...");
